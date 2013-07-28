@@ -1,9 +1,7 @@
 name: ghpages_generator
-version: 0.0.1-dev
+version: 0.0.1
 author: Alexandre Ardhuin <alexandre.ardhuin@gmail.com>
 description: This package allows to generate gh-pages branch for Github with dartdoc and examples
 homepage: https://github.com/a14n/dart-ghpages-generator
 dependencies:
   path: any
-dev_dependencies:
-  unittest: any
