@@ -129,18 +129,18 @@ class Generator {
       })
       .then((_) => Process.run('pub', ['install'], workingDirectory: _workDir))
       .then((_){
-        if (!_examples) return;
+        if (!_examples) return null;
 
         print('examples compilation...');
 
-        // move example to web to use 'pub deploy'
+        // move example to web to use 'pub build'
         new Directory(path.join(_workDir, 'example'))
           .renameSync(path.join(_workDir, 'web'));
         return Process
-          .run('pub', ['deploy'], workingDirectory: _workDir)
+          .run('pub', ['build'], workingDirectory: _workDir)
           .then((_){
-            // move deploy to example and remove web
-            new Directory(path.join(_workDir, 'deploy'))
+            // move build to example and remove web
+            new Directory(path.join(_workDir, 'build'))
               .renameSync(path.join(_workDir, 'example'));
             _delete(_workDir, ['web']);
           })
@@ -152,7 +152,7 @@ class Generator {
           });
       })
       .then((_) {
-        if (_dartdocFiles == null || _dartdocFiles.isEmpty) return;
+        if (_dartdocFiles == null || _dartdocFiles.isEmpty) return null;
 
         print('dartdoc generation...');
         new Directory(path.join(_workDir, _dartdocOutDir)).createSync(recursive: true);
