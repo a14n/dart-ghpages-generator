@@ -1,1 +1,1 @@
-{"name":"dart:","dependencies":[],"revision":"0","libraries":[{"refId":"ghpages_generator"}],"description":"Dart System Libraries"}
+{"name":"dart:","description":"Dart System Libraries","libraries":[{"refId":"ghpages_generator"}],"revision":"0","dependencies":[]}
