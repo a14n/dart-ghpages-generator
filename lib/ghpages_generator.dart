@@ -91,6 +91,8 @@ class Generator {
   }
 
   /// Specify that examples have to be compiled and included in _gh-pages_.
+  /// If [compileDart] is false the generated dart files (get with `pub build`)
+  /// will be replace by the original ones from examples.
   setExamples(bool value, {compileDart: true}) {
     _examples = value;
     _examplesCompileDart = compileDart;
