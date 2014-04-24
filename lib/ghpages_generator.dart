@@ -36,9 +36,8 @@ class Generator {
   String _workDir;
   String _gitRemoteOnRoot;
 
-  String _dartdocOutDir;
-  List<String> _dartdocOptions;
-  List<String> _dartdocFiles;
+  List<String> _docGenOptions;
+  List<String> _docGenFiles;
 
   bool _examples = false;
   bool _examplesCompileDart;
@@ -62,31 +61,38 @@ class Generator {
   String get workDir => _workDir;
 
   /**
-   * Specify that _dartdoc_ have to be generated for the given [files].
-   * [dartdoc](http://www.dartlang.org/docs/dart-up-and-running/contents/ch04-tools-dartdoc.html)
-   * options can be set through the named parameters. By default, _dartdoc_ is
-   * generated in `docs/dartdoc` in _static_ mode and without code.
+   * Specify that _dartDoc_ have to be generated for the given [files] using the
+   * `docgen` command line tool.
+   *
+   * Options can be set through the named parameters. By default, _dartDoc_ is
+   * generated in `docs/dartdoc`.
    */
-  setDartDoc(List<String> files, {String outDir: 'docs/dartdoc',
-      bool code: false, List<String> excludedLibs, bool omitGenerationTime,
-      String mode: 'static'}) {
-    _dartdocFiles = files;
-    _dartdocOptions = ['--package-root=packages'];
-    if (outDir != null) {
-      _dartdocOutDir = outDir;
-      _dartdocOptions.add('--out=$outDir');
+  setDartDoc(List<String> files, {bool includePrivate, bool includeSdk,
+      bool parseSdk, String introduction,
+      List<String> excludedLibs, bool includeDependentPackages,
+      String startPage}) {
+    _docGenFiles = files;
+    _docGenOptions = ['--compile', '--package-root=packages'];
+    if (includePrivate == true) {
+      _docGenOptions.add('--include-private');
     }
-    if (code != null && !code) {
-      _dartdocOptions.add('--no-code');
+    if (includeSdk == true) {
+      _docGenOptions.add('--include-sdk');
+    }
+    if (parseSdk == true) {
+      _docGenOptions.add('--parse-sdk');
+    }
+    if (introduction != null) {
+      _docGenOptions.add('--introduction=$introduction');
     }
     if (excludedLibs != null) {
-      excludedLibs.forEach((e) => _dartdocOptions.add('--exclude-lib=$e'));
+      excludedLibs.forEach((e) => _docGenOptions.add('--exclude-lib=$e'));
     }
-    if (omitGenerationTime != null && omitGenerationTime){
-      _dartdocOptions.add('--omit-generation-time');
+    if (includeDependentPackages == true) {
+      _docGenOptions.add('--include-dependent-packages');
     }
-    if (mode != null) {
-      _dartdocOptions.add('--mode=$mode');
+    if (startPage != null) {
+      _docGenOptions.add('--start-page=$startPage');
     }
   }
 
@@ -129,42 +135,44 @@ class Generator {
         _copy(_rootDir, _workDir, elementsToCopy,
             accept: (pathToCopy) => path.basename(pathToCopy) != 'packages');
       })
-      .then((_) => Process.run('pub', ['install'], workingDirectory: _workDir))
+      .then((_) => Process.run('pub', ['get'], workingDirectory: _workDir))
       .then((_){
         if (!_examples) return null;
 
         print('examples compilation...');
 
-        // move example to web to use 'pub build'
-        new Directory(path.join(_workDir, 'example'))
-          .renameSync(path.join(_workDir, 'web'));
         return Process
-          .run('pub', ['build'], workingDirectory: _workDir)
+          .run('pub', ['build', 'example'], workingDirectory: _workDir)
           .then((_){
             // move build to example and remove web
-            new Directory(path.join(_workDir, 'build'))
+            _delete(_workDir, ['example']);
+            new Directory(path.join(_workDir, 'build', 'example'))
               .renameSync(path.join(_workDir, 'example'));
-            _delete(_workDir, ['web']);
           })
           .then((_){
-            if (_examplesCompileDart != null && _examplesCompileDart) return;
+            if (_examplesCompileDart) return;
 
             // copy origin files
             _copy(_rootDir, _workDir, ['example']);
           });
       })
       .then((_) {
-        if (_dartdocFiles == null || _dartdocFiles.isEmpty) return null;
+        if (_docGenFiles == null || _docGenFiles.isEmpty) return null;
 
-        print('dartdoc generation...');
-        new Directory(path.join(_workDir, _dartdocOutDir)).createSync(recursive: true);
-        return Process.run('dartdoc',
-            []..addAll(_dartdocOptions)
-              ..addAll(_dartdocFiles),
-            workingDirectory: _workDir);
+        print('dartDoc generation...');
+        return Process.run('docgen',
+            []..addAll(_docGenOptions)
+              ..addAll(_docGenFiles),
+            workingDirectory: _workDir).then((_){
+          new Directory(path.join(_workDir, 'dartdoc-viewer', 'client', 'out', 'web'))
+            .renameSync(path.join(_workDir, 'dartdoc'));
+          new Directory(path.join(_workDir, 'dartdoc', 'packages')).deleteSync(recursive: true);
+          new Directory(path.join(_workDir, 'dartdoc-viewer', 'client', 'out', 'packages'))
+            .renameSync(path.join(_workDir, 'dartdoc', 'packages'));
+        });
       })
       .then((_) {
-        _delete(_workDir, ['packages', 'lib', 'pubspec.yaml', 'pubspec.lock']);
+        _delete(_workDir, ['packages', 'lib', 'pubspec.yaml', 'pubspec.lock', 'dartdoc-viewer']);
       })
       .then((_) {
         if (_templateDir != null) {
