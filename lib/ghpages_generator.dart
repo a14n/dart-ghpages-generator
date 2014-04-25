@@ -19,6 +19,16 @@ import 'dart:io';
 
 import 'package:path/path.dart' as path;
 
+/// Update the gh-pages branch with the pub build of web folder.
+updateWithOnlyWeb({doCustomTask(workDir)}) => new Generator()
+    ..withWeb = true
+    ..generate(doCustomTask: (workDir) {
+      new Directory(path.join(workDir, 'web')).listSync().forEach((e) =>
+          e.renameSync(path.join(workDir, path.basename(e.path))));
+      _delete(workDir, ['web']);
+      if (doCustomTask != null) doCustomTask(workDir);
+    });
+
 /**
  * This class allows to generate a new version of gh-pages. You can choose
  * what you want to put in gh-pages : examples, dartdoc, docs and/or custom
@@ -42,6 +52,7 @@ class Generator {
   bool _examples = false;
   bool _examplesCompileDart;
 
+  bool _web = false;
   bool _docs = false;
   String _templateDir;
 
@@ -104,6 +115,9 @@ class Generator {
     _examplesCompileDart = compileDart;
   }
 
+  /// Specify that the `web` directory have to be paste in _gh-pages_.
+  set withWeb(bool value) => _web = value;
+
   /// Specify that the `docs` directory have to be paste in _gh-pages_.
   set withDocs(bool value) => _docs = value;
 
@@ -113,7 +127,7 @@ class Generator {
 
   /// Generate gh-pages. A [doCustomTask] method can be set to perform custom
   /// operations just before committing files.
-  Future<dynamic> generate({doCustomTask()}) {
+  Future generate({doCustomTask(workDir)}) {
     new Directory(_workDir).createSync();
     _copy(_rootDir, _workDir, ['.git']);
 
@@ -131,6 +145,7 @@ class Generator {
         // copy of directories
         final elementsToCopy = ['pubspec.yaml', 'pubspec.lock', 'lib'];
         if (_examples) elementsToCopy.add('example');
+        if (_web) elementsToCopy.add('web');
         if (_docs) elementsToCopy.add('docs');
         _copy(_rootDir, _workDir, elementsToCopy,
             accept: (pathToCopy) => path.basename(pathToCopy) != 'packages');
@@ -155,6 +170,20 @@ class Generator {
             // copy origin files
             _copy(_rootDir, _workDir, ['example']);
           });
+      })
+      .then((_){
+        if (!_web) return null;
+
+        print('web compilation...');
+
+        return Process
+            .run('pub', ['build', 'web'], workingDirectory: _workDir)
+            .then((_){
+          // move build to example and remove web
+          _delete(_workDir, ['web']);
+          new Directory(path.join(_workDir, 'build', 'web'))
+            .renameSync(path.join(_workDir, 'web'));
+        });
       })
       .then((_) {
         if (_docGenFiles == null || _docGenFiles.isEmpty) return null;
@@ -181,7 +210,7 @@ class Generator {
         }
       })
       .then((_) {
-        if (doCustomTask != null) return doCustomTask();
+        if (doCustomTask != null) return doCustomTask(_workDir);
       })
       .then((_) => Process.run('git', ['add', '.'], workingDirectory: _workDir))
       .then((_) => Process.run('git', ['commit', '-m', '"update gh-pages"'], workingDirectory: _workDir))
@@ -195,36 +224,36 @@ class Generator {
       })
       ;
   }
+}
 
-  void _delete(String dir, List<String> elements) {
-    elements.forEach((e){
-      final name = path.join(dir, e);
-      if (FileSystemEntity.isDirectorySync(name)) new Directory(name).deleteSync(recursive: true);
-      else if (FileSystemEntity.isFileSync(name)) new File(name).deleteSync();
-    });
-  }
+void _delete(String dir, List<String> elements) {
+  elements.forEach((e){
+    final name = path.join(dir, e);
+    if (FileSystemEntity.isDirectorySync(name)) new Directory(name).deleteSync(recursive: true);
+    else if (FileSystemEntity.isFileSync(name)) new File(name).deleteSync();
+  });
+}
 
-  void _copy(String sourceDirPath, String targetDirPath,
-             Iterable<String> elementsToCopy,
-             {bool accept(String sourcePath)}) {
-    for (final element in elementsToCopy) {
-      final sourcePath = path.join(sourceDirPath, element);
+void _copy(String sourceDirPath, String targetDirPath,
+           Iterable<String> elementsToCopy,
+           {bool accept(String sourcePath)}) {
+  for (final element in elementsToCopy) {
+    final sourcePath = path.join(sourceDirPath, element);
 
-      // next if not acceptable
-      if (accept != null && !accept(sourcePath)) continue;
+    // next if not acceptable
+    if (accept != null && !accept(sourcePath)) continue;
 
-      // copy
-      final targetPath = path.join(targetDirPath, element);
-      if (FileSystemEntity.isDirectorySync(sourcePath)) {
-        new Directory(targetPath).createSync();
-        _copy(sourcePath, targetPath,
-            new Directory(sourcePath).listSync().map((e) => path.basename(e.path)),
-            accept: accept);
-      } else if (FileSystemEntity.isFileSync(sourcePath)) {
-        new File(targetPath)
-          ..createSync()
-          ..writeAsBytesSync(new File(sourcePath).readAsBytesSync());
-      }
+    // copy
+    final targetPath = path.join(targetDirPath, element);
+    if (FileSystemEntity.isDirectorySync(sourcePath)) {
+      new Directory(targetPath).createSync();
+      _copy(sourcePath, targetPath,
+          new Directory(sourcePath).listSync().map((e) => path.basename(e.path)),
+          accept: accept);
+    } else if (FileSystemEntity.isFileSync(sourcePath)) {
+      new File(targetPath)
+        ..createSync()
+        ..writeAsBytesSync(new File(sourcePath).readAsBytesSync());
     }
   }
 }
