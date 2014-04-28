@@ -20,13 +20,13 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 
 /// Update the gh-pages branch with the pub build of web folder.
-updateWithOnlyWeb({doCustomTask(workDir)}) => new Generator()
+updateWithWebOnly({doCustomTask(workDir)}) => new Generator()
     ..withWeb = true
     ..generate(doCustomTask: (workDir) {
       new Directory(path.join(workDir, 'web')).listSync().forEach((e) =>
           e.renameSync(path.join(workDir, path.basename(e.path))));
       _delete(workDir, ['web']);
-      if (doCustomTask != null) doCustomTask(workDir);
+      if (doCustomTask != null) return doCustomTask(workDir);
     });
 
 /**
