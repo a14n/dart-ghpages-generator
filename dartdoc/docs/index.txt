@@ -9923,4 +9923,6 @@ ghpages_generator/ghpages_generator.Generator.setDartDoc method
 ghpages_generator/ghpages_generator.Generator.setExamples method
 ghpages_generator/ghpages_generator.Generator.templateDir= setter
 ghpages_generator/ghpages_generator.Generator.withDocs= setter
+ghpages_generator/ghpages_generator.Generator.withWeb= setter
 ghpages_generator/ghpages_generator.Generator.workDir getter
+ghpages_generator/ghpages_generator.updateWithWebOnly method
