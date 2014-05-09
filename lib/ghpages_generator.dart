@@ -20,14 +20,33 @@ import 'dart:io';
 import 'package:path/path.dart' as path;
 
 /// Update the gh-pages branch with the pub build of web folder.
-updateWithWebOnly({doCustomTask(workDir)}) => new Generator()
-    ..withWeb = true
-    ..generate(doCustomTask: (workDir) {
-      new Directory(path.join(workDir, 'web')).listSync().forEach((e) =>
-          e.renameSync(path.join(workDir, path.basename(e.path))));
-      _delete(workDir, ['web']);
-      if (doCustomTask != null) return doCustomTask(workDir);
-    });
+Future updateWithWebOnly({doCustomTask(String workDir)}) =>
+    (new Generator()..withWeb = true)
+        .generate(doCustomTask: (String workDir) {
+          moveWebAtRoot(workDir);
+          if (doCustomTask != null) return doCustomTask(workDir);
+        });
+
+/// Move the dartdoc folder at the root.
+void moveDartDocAtRoot(String workDir) {
+  _moveContent(workDir, 'dartdoc');
+}
+
+/// Move the web folder at the root.
+void moveWebAtRoot(String workDir) {
+  _moveContent(workDir, 'web');
+}
+
+/// Move all files and directory  from a [from] folderinto the [base] folder.
+/// The [from] folder must be a direct child of [base].
+/// For instance :
+///
+///     _moveContent(workDir, 'web');
+void _moveContent(String base, String from) {
+  new Directory(path.join(base, from)).listSync().forEach((e) =>
+      e.renameSync(path.join(base, path.basename(e.path))));
+  _delete(base, [from]);
+}
 
 /**
  * This class allows to generate a new version of gh-pages. You can choose
@@ -127,7 +146,7 @@ class Generator {
 
   /// Generate gh-pages. A [doCustomTask] method can be set to perform custom
   /// operations just before committing files.
-  Future generate({doCustomTask(workDir)}) {
+  Future generate({doCustomTask(String workDir)}) {
     new Directory(_workDir).createSync();
     _copy(_rootDir, _workDir, ['.git']);
 

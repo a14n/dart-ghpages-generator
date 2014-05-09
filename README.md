@@ -22,8 +22,7 @@ main() {
   new gh.Generator()
       ..setDartDoc(['lib/ghpages_generator.dart'], includeSdk: false,
           excludedLibs: ['path'], startPage: 'ghpages_generator')
-      ..templateDir = 'gh-pages-template'
-      ..generate();
+      ..generate(doCustomTask: gh.moveDartDocAtRoot);
 }
 ```
 
