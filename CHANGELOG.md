@@ -1,4 +1,18 @@
 
+# v0.2.0 (2014-07-11)
+
+Add utility functions to simplify the publication of examples at root with :
+
+```dart
+  new gh.Generator()
+      ..withExamples = true
+      ..generate(doCustomTask: gh.moveExampleAtRoot);
+```
+
+## breaking change
+
+`setExamples` has been replaced by `withExamples`.
+
 # v0.1.2 (2014-07-11)
 
 Use `git -f add` to avoid problem with global .gitignore containing `packages`

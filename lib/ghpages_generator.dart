@@ -37,6 +37,11 @@ void moveWebAtRoot(String workDir) {
   _moveContent(workDir, 'web');
 }
 
+/// Move the example folder at the root.
+void moveExampleAtRoot(String workDir) {
+  _moveContent(workDir, 'example');
+}
+
 /// Move all files and directory  from a [from] folderinto the [base] folder.
 /// The [from] folder must be a direct child of [base].
 /// For instance :
@@ -69,8 +74,6 @@ class Generator {
   List<String> _docGenFiles;
 
   bool _examples = false;
-  bool _examplesCompileDart;
-
   bool _web = false;
   bool _docs = false;
   String _templateDir;
@@ -126,13 +129,8 @@ class Generator {
     }
   }
 
-  /// Specify that examples have to be compiled and included in _gh-pages_.
-  /// If [compileDart] is false the generated dart files (get with `pub build`)
-  /// will be replace by the original ones from examples.
-  setExamples(bool value, {compileDart: true}) {
-    _examples = value;
-    _examplesCompileDart = compileDart;
-  }
+  /// Specify that the `example` directory have to be paste in _gh-pages_.
+  set withExamples(bool value) => _examples = value;
 
   /// Specify that the `web` directory have to be paste in _gh-pages_.
   set withWeb(bool value) => _web = value;
@@ -182,12 +180,6 @@ class Generator {
             _delete(_workDir, ['example']);
             new Directory(path.join(_workDir, 'build', 'example'))
               .renameSync(path.join(_workDir, 'example'));
-          })
-          .then((_){
-            if (_examplesCompileDart) return;
-
-            // copy origin files
-            _copy(_rootDir, _workDir, ['example']);
           });
       })
       .then((_){
@@ -232,7 +224,7 @@ class Generator {
         if (doCustomTask != null) return doCustomTask(_workDir);
       })
       .then((_) => Process.run('git', ['add', '-f', '.'], workingDirectory: _workDir))
-      .then((_) => Process.run('git', ['commit', '-m', '"update gh-pages"'], workingDirectory: _workDir))
+      .then((_) => Process.run('git', ['commit', '-m', 'update gh-pages'], workingDirectory: _workDir))
       .then((_) => Process.run('git', ['push', _gitRemoteOnRoot, 'gh-pages'], workingDirectory: _workDir))
       .then((_) {
         print("Your gh-pages has been updated.");
