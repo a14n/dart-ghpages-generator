@@ -220,7 +220,7 @@ class Generator {
         });
       })
       .then((_) {
-        _delete(_workDir, ['packages', 'lib', 'pubspec.yaml', 'pubspec.lock', 'dartdoc-viewer']);
+        _delete(_workDir, ['build', 'packages', 'lib', 'pubspec.yaml', 'pubspec.lock', 'dartdoc-viewer']);
       })
       .then((_) {
         if (_templateDir != null) {
@@ -231,7 +231,7 @@ class Generator {
       .then((_) {
         if (doCustomTask != null) return doCustomTask(_workDir);
       })
-      .then((_) => Process.run('git', ['add', '.'], workingDirectory: _workDir))
+      .then((_) => Process.run('git', ['add', '-f', '.'], workingDirectory: _workDir))
       .then((_) => Process.run('git', ['commit', '-m', '"update gh-pages"'], workingDirectory: _workDir))
       .then((_) => Process.run('git', ['push', _gitRemoteOnRoot, 'gh-pages'], workingDirectory: _workDir))
       .then((_) {
