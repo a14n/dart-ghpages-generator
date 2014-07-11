@@ -1,4 +1,8 @@
 
+# v0.1.2 (2014-07-11)
+
+Use `git -f add` to avoid problem with global .gitignore containing `packages`
+
 # v0.1.1 (2014-05-09)
 
 Add utility functions to simplify the publication of dartdoc at root with :
