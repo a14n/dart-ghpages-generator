@@ -19,6 +19,11 @@ import 'dart:io';
 
 import 'package:path/path.dart' as path;
 
+@lazyIndexGeneratorLoader
+import 'index_generator.dart' as ig;
+
+const lazyIndexGeneratorLoader = const DeferredLibrary('ghpages_generator.index_generator');
+
 /// Update the gh-pages branch with the pub build of web folder.
 Future updateWithWebOnly({doCustomTask(String workDir)}) =>
     (new Generator()..withWeb = true)
@@ -77,6 +82,7 @@ class Generator {
   bool _web = false;
   bool _docs = false;
   String _templateDir;
+  bool _indexGeneration = false;
 
   /**
    * Create a [Generator] based on the current directory where script is launch.
@@ -141,6 +147,10 @@ class Generator {
   /// Indicates a template directory from which all files will be paste in
   /// _gh-pages_.
   set templateDir(String templateDir) => _templateDir = templateDir;
+
+  /// Specify that your script have to generate index pages automatically
+  /// if there does not exist in [_workDir] and sub-directories of [_workDir]
+  set withIndexGeneration(bool value) => _indexGeneration = value;
 
   /// Generate gh-pages. A [doCustomTask] method can be set to perform custom
   /// operations just before committing files.
@@ -218,6 +228,12 @@ class Generator {
         if (_templateDir != null) {
           final template = path.join(_rootDir, _templateDir);
           _copy(template, _workDir, new Directory(template).listSync().map((e) => path.basename(e.path)));
+        }
+      })
+      .then((_) {
+        if (_indexGeneration) {
+          return lazyIndexGeneratorLoader.load()
+            .then((_) => new ig.IndexGenerator.fromPath(_workDir).generate());
         }
       })
       .then((_) {
