@@ -6,7 +6,7 @@ import 'dart:async';
 import 'package:path/path.dart' as path;
 
 /**
- * An generator for index page such as 'index.html'.
+ * A generator for index pages such as 'index.html'.
  *
  * The following example code generates gh-pages and
  * automatically generates `index.html` if `index.html` doesn't exist
@@ -26,7 +26,7 @@ class IndexGenerator {
   static const DEFAULT_INDEX_FILE_NAME = 'index.html';
   static const DEFAULT_EXCLUDES = const ['packages', '.git'];
 
-  /// The target dirctory.
+  /// The target directory.
   Directory baseDir;
 
   List<File> _indexes;
@@ -50,7 +50,7 @@ class IndexGenerator {
   bool overwrite = false;
 
   /**
-   * The flag whether this generator generate all index pages in all sub directoreis.
+   * The flag whether this generator generates all index pages in all sub directories.
    * default: `true`
    */
   bool recursive = true;
@@ -110,7 +110,7 @@ class IndexGenerator {
 
     if (!overwrite) {
       targetIndexes =
-        targetIndexes.asyncExpand((File i) => _removeIfExests(i));
+        targetIndexes.asyncExpand(_removeIfExists);
     }
 
     return targetIndexes
@@ -165,15 +165,15 @@ class IndexGenerator {
     return c.stream;
   }
 
-  Stream<File> _removeIfNotExests(File file) =>
+  Stream<File> _removeIfNotExists(File file) =>
       _removeIf(file.exists(), file);
 
-  Stream<File> _removeIfExests(File file) =>
+  Stream<File> _removeIfExists(File file) =>
       _removeIf(file.exists().then((b) => !b), file);
 
   Stream _removeIf(Future<bool> condition, element) =>
       condition
-        .then((e) => (e) ? element : _NOTHING)
+        .then((e) => e ? element : _NOTHING)
         .asStream()
         .where((i) => i != _NOTHING);
 

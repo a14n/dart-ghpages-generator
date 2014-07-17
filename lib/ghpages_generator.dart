@@ -148,7 +148,7 @@ class Generator {
   /// _gh-pages_.
   set templateDir(String templateDir) => _templateDir = templateDir;
 
-  /// Specify that your script have to generate index pages automatically
+  /// Specify that your script has to generate index pages automatically
   /// if there does not exist in [_workDir] and sub-directories of [_workDir]
   set withIndexGeneration(bool value) => _indexGeneration = value;
 
