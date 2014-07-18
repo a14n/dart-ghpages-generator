@@ -44,8 +44,10 @@ main() {
 Here's the available actions :
 
 - generate the _dartdoc_ with `setDartDoc`
-- compile and deploy the _examples_ with `setExamples`
+- compile and deploy the _example_ directory with `withExamples`
+- compile and deploy the _web_ directory with `withWeb`
 - add the `docs` directory with `withDocs`
+- add the `index.html` files with `withIndexGeneration`
 - add static files with `templateDir` : all files in the template directory are
 pasted to the _gh-pages_ branch
 

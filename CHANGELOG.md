@@ -1,4 +1,8 @@
 
+# v0.2.1 (2014-07-18)
+
+Add a generator of index.html files with `withIndexGeneration`.
+
 # v0.2.0 (2014-07-11)
 
 Add utility functions to simplify the publication of examples at root with :
