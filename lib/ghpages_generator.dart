@@ -19,10 +19,7 @@ import 'dart:io';
 
 import 'package:path/path.dart' as path;
 
-@lazyIndexGeneratorLoader
-import 'index_generator.dart' as ig;
-
-const lazyIndexGeneratorLoader = const DeferredLibrary('ghpages_generator.index_generator');
+import 'index_generator.dart' deferred as ig;
 
 /// Update the gh-pages branch with the pub build of web folder.
 Future updateWithWebOnly({doCustomTask(String workDir)}) =>
@@ -232,7 +229,7 @@ class Generator {
       })
       .then((_) {
         if (_indexGeneration) {
-          return lazyIndexGeneratorLoader.load()
+          return ig.loadLibrary()
             .then((_) => new ig.IndexGenerator.fromPath(_workDir).generate());
         }
       })

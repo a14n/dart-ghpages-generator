@@ -1,4 +1,8 @@
 
+# v0.2.2 (2014-09-01)
+
+Switch to the new deferred loading syntax (needs DartSDK >= 1.6).
+
 # v0.2.1 (2014-07-18)
 
 Add a generator of index.html files with `withIndexGeneration`.
