@@ -1,4 +1,8 @@
 
+# v0.2.3 (2015-01-12)
+
+Ignore `.pub`.
+
 # v0.2.2 (2014-09-01)
 
 Switch to the new deferred loading syntax (needs DartSDK >= 1.6).
