@@ -219,7 +219,7 @@ class Generator {
         });
       })
       .then((_) {
-        _delete(_workDir, ['build', 'packages', 'lib', 'pubspec.yaml', 'pubspec.lock', 'dartdoc-viewer']);
+        _delete(_workDir, ['build', 'packages', 'lib', 'pubspec.yaml', 'pubspec.lock', 'dartdoc-viewer', '.pub']);
       })
       .then((_) {
         if (_templateDir != null) {
