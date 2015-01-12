@@ -1,4 +1,8 @@
 
+# v0.2.4 (2015-01-12)
+
+Provide executables for [pub globally activation](https://www.dartlang.org/tools/pub/cmd/pub-global.html).
+
 # v0.2.3 (2015-01-12)
 
 Ignore `.pub`.
