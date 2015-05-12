@@ -1,4 +1,8 @@
 
+# v0.2.5 (2015-05-12)
+
+Wider [args](https://pub.dartlang.org/packages/args) dependency.
+
 # v0.2.4 (2015-01-12)
 
 Provide executables for [pub globally activation](https://www.dartlang.org/tools/pub/cmd/pub-global.html).
