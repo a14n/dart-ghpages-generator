@@ -22,11 +22,13 @@ import 'package:path/path.dart' as path;
 import 'index_generator.dart' deferred as ig;
 
 /// Update the gh-pages branch with the pub build of web folder.
-Future updateWithWebOnly({doCustomTask(String workDir)}) => (new Generator()
-  ..withWeb = true).generate(doCustomTask: (String workDir) {
-  moveWebAtRoot(workDir);
-  if (doCustomTask != null) return doCustomTask(workDir);
-});
+Future updateWithWebOnly({doCustomTask(String workDir)}) {
+  final generator = new Generator()..withWeb = true;
+  return generator.generate(doCustomTask: (String workDir) {
+    moveWebAtRoot(workDir);
+    if (doCustomTask != null) return doCustomTask(workDir);
+  });
+}
 
 /// Move the dartdoc folder at the root.
 void moveDartDocAtRoot(String workDir) {
@@ -150,27 +152,20 @@ class Generator {
 
   /// Generate gh-pages. A [doCustomTask] method can be set to perform custom
   /// operations just before committing files.
-  Future generate({doCustomTask(String workDir)}) {
+  Future generate({doCustomTask(String workDir)}) async {
     new Directory(_workDir).createSync();
-    _copy(_rootDir, _workDir, ['.git']);
+    try {
+      _copy(_rootDir, _workDir, ['.git']);
 
-    // git clone
-    return Process
-        .run('git', ['reset', '--hard'], workingDirectory: _workDir)
-        .then((_) => Process.run(
-            'git', ['remote', 'add', _gitRemoteOnRoot, _rootDir],
-            workingDirectory: _workDir))
-        .then((_) => Process
-            .run('git', ['checkout', 'gh-pages'], workingDirectory: _workDir)
-            .then((pr) {
-      if (pr.exitCode != 0) {
-        return Process.run('git', ['checkout', '--orphan', 'gh-pages'],
-            workingDirectory: _workDir);
+      // git clone and preparation of the gh-pages branch
+      await _run('git', ['reset', '--hard']);
+      await _run('git', ['remote', 'add', _gitRemoteOnRoot, _rootDir]);
+      final resultCheckout = await _run('git', ['checkout', 'gh-pages']);
+      if (resultCheckout.exitCode != 0) {
+        await _run('git', ['checkout', '--orphan', 'gh-pages']);
       }
-    }))
-        .then((_) =>
-            Process.run('git', ['rm', '-rf', '.'], workingDirectory: _workDir))
-        .then((_) {
+      await _run('git', ['rm', '-rf', '.']);
+
       // copy of directories
       final elementsToCopy = ['pubspec.yaml', 'pubspec.lock', 'lib'];
       if (_examples) elementsToCopy.add('example');
@@ -178,41 +173,38 @@ class Generator {
       if (_docs) elementsToCopy.add('docs');
       _copy(_rootDir, _workDir, elementsToCopy,
           accept: (pathToCopy) => path.basename(pathToCopy) != 'packages');
-    })
-        .then((_) => Process.run('pub', ['get'], workingDirectory: _workDir))
-        .then((_) {
-      if (!_examples) return null;
 
-      print('examples compilation...');
+      // get deps
+      await _run('pub', ['get']);
 
-      return Process
-          .run('pub', ['build', 'example'], workingDirectory: _workDir)
-          .then((_) {
+      if (_examples) {
+        print('examples compilation...');
+
+        await _run('pub', ['build', 'example']);
+
         // move build to example and remove web
         _delete(_workDir, ['example']);
         new Directory(path.join(_workDir, 'build', 'example'))
             .renameSync(path.join(_workDir, 'example'));
-      });
-    }).then((_) {
-      if (!_web) return null;
+      }
 
-      print('web compilation...');
+      if (_web) {
+        print('web compilation...');
 
-      return Process
-          .run('pub', ['build', 'web'], workingDirectory: _workDir)
-          .then((_) {
+        await _run('pub', ['build', 'web']);
+
         // move build to example and remove web
         _delete(_workDir, ['web']);
         new Directory(path.join(_workDir, 'build', 'web'))
             .renameSync(path.join(_workDir, 'web'));
-      });
-    }).then((_) {
-      if (_docGenFiles == null || _docGenFiles.isEmpty) return null;
+      }
 
-      print('dartDoc generation...');
-      return Process.run('docgen', []
-        ..addAll(_docGenOptions)
-        ..addAll(_docGenFiles), workingDirectory: _workDir).then((_) {
+      if (_docGenFiles != null && _docGenFiles.isNotEmpty) {
+        print('dartDoc generation...');
+        await _run('docgen', []
+          ..addAll(_docGenOptions)
+          ..addAll(_docGenFiles));
+
         new Directory(
                 path.join(_workDir, 'dartdoc-viewer', 'client', 'out', 'web'))
             .renameSync(path.join(_workDir, 'dartdoc'));
@@ -221,8 +213,8 @@ class Generator {
         new Directory(path.join(
                 _workDir, 'dartdoc-viewer', 'client', 'out', 'packages'))
             .renameSync(path.join(_workDir, 'dartdoc', 'packages'));
-      });
-    }).then((_) {
+      }
+
       _delete(_workDir, [
         'build',
         'packages',
@@ -232,43 +224,44 @@ class Generator {
         'dartdoc-viewer',
         '.pub'
       ]);
-    }).then((_) {
+
       if (_templateDir != null) {
         final template = path.join(_rootDir, _templateDir);
         _copy(template, _workDir, new Directory(template)
             .listSync()
             .map((e) => path.basename(e.path)));
       }
-    }).then((_) {
+
       if (_indexGeneration) {
-        return ig
-            .loadLibrary()
-            .then((_) => new ig.IndexGenerator.fromPath(_workDir).generate());
+        await ig.loadLibrary();
+        await new ig.IndexGenerator.fromPath(_workDir).generate();
       }
-    }).then((_) {
-      if (doCustomTask != null) return doCustomTask(_workDir);
-    })
-        .then((_) =>
-            Process.run('git', ['add', '-f', '.'], workingDirectory: _workDir))
-        .then((_) => Process.run('git', ['commit', '-m', 'update gh-pages'],
-            workingDirectory: _workDir))
-        .then((_) => Process.run('git', ['push', _gitRemoteOnRoot, 'gh-pages'],
-            workingDirectory: _workDir))
-        .then((_) {
+
+      if (doCustomTask != null) await doCustomTask(_workDir);
+
+      await _run('git', ['add', '-f', '.']);
+      await _run('git', ['commit', '-m', 'update gh-pages']);
+      await _run('git', ['push', _gitRemoteOnRoot, 'gh-pages']);
+
       print("Your gh-pages has been updated.");
       print("You can now push it on github.");
-    }).whenComplete(() {
+    } finally {
       new Directory(_workDir).deleteSync(recursive: true);
-    });
+    }
   }
+
+  Future<ProcessResult> _run(String executable, List<String> arguments) =>
+      Process.run(executable, arguments, workingDirectory: _workDir);
 }
 
 void _delete(String dir, List<String> elements) {
   elements.forEach((e) {
     final name = path.join(dir, e);
-    if (FileSystemEntity.isDirectorySync(name)) new Directory(name).deleteSync(
-        recursive: true);
-    else if (FileSystemEntity.isFileSync(name)) new File(name).deleteSync();
+    if (FileSystemEntity.isDirectorySync(name)) {
+      new Directory(name).deleteSync(recursive: true);
+    } else if (FileSystemEntity.isFileSync(name)) {
+      new File(name).deleteSync();
+    }
   });
 }
 
