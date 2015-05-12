@@ -22,12 +22,11 @@ import 'package:path/path.dart' as path;
 import 'index_generator.dart' deferred as ig;
 
 /// Update the gh-pages branch with the pub build of web folder.
-Future updateWithWebOnly({doCustomTask(String workDir)}) =>
-    (new Generator()..withWeb = true)
-        .generate(doCustomTask: (String workDir) {
-          moveWebAtRoot(workDir);
-          if (doCustomTask != null) return doCustomTask(workDir);
-        });
+Future updateWithWebOnly({doCustomTask(String workDir)}) => (new Generator()
+  ..withWeb = true).generate(doCustomTask: (String workDir) {
+  moveWebAtRoot(workDir);
+  if (doCustomTask != null) return doCustomTask(workDir);
+});
 
 /// Move the dartdoc folder at the root.
 void moveDartDocAtRoot(String workDir) {
@@ -50,8 +49,9 @@ void moveExampleAtRoot(String workDir) {
 ///
 ///     _moveContent(workDir, 'web');
 void _moveContent(String base, String from) {
-  new Directory(path.join(base, from)).listSync().forEach((e) =>
-      e.renameSync(path.join(base, path.basename(e.path))));
+  new Directory(path.join(base, from))
+      .listSync()
+      .forEach((e) => e.renameSync(path.join(base, path.basename(e.path))));
   _delete(base, [from]);
 }
 
@@ -88,8 +88,11 @@ class Generator {
    */
   Generator({String rootDir}) {
     final timestamp = new DateTime.now().millisecondsSinceEpoch;
-    _rootDir = rootDir != null ? rootDir : path.dirname(path.absolute(Platform.script.toFilePath()));
-    _workDir = path.join(_rootDir, '../${path.basename(_rootDir)}-ghpages-${timestamp}');
+    _rootDir = rootDir != null
+        ? rootDir
+        : path.dirname(path.absolute(Platform.script.toFilePath()));
+    _workDir = path.join(
+        _rootDir, '../${path.basename(_rootDir)}-ghpages-${timestamp}');
     _gitRemoteOnRoot = 'origin-${timestamp}';
   }
 
@@ -104,9 +107,8 @@ class Generator {
    * generated in `docs/dartdoc`.
    */
   setDartDoc(List<String> files, {bool includePrivate, bool includeSdk,
-      bool parseSdk, String introduction,
-      List<String> excludedLibs, bool includeDependentPackages,
-      String startPage}) {
+      bool parseSdk, String introduction, List<String> excludedLibs,
+      bool includeDependentPackages, String startPage}) {
     _docGenFiles = files;
     _docGenOptions = ['--compile', '--package-root=packages'];
     if (includePrivate == true) {
@@ -156,111 +158,126 @@ class Generator {
     _copy(_rootDir, _workDir, ['.git']);
 
     // git clone
-    return Process.run('git', ['reset', '--hard'], workingDirectory: _workDir)
-      .then((_) => Process.run('git', ['remote', 'add', _gitRemoteOnRoot, _rootDir], workingDirectory: _workDir))
-      .then((_) => Process.run('git', ['checkout', 'gh-pages'], workingDirectory: _workDir)
-          .then((pr) {
-            if (pr.exitCode != 0) {
-              return Process.run('git', ['checkout', '--orphan', 'gh-pages'], workingDirectory: _workDir);
-            }
-          }))
-      .then((_) => Process.run('git', ['rm', '-rf', '.'], workingDirectory: _workDir))
-      .then((_){
-        // copy of directories
-        final elementsToCopy = ['pubspec.yaml', 'pubspec.lock', 'lib'];
-        if (_examples) elementsToCopy.add('example');
-        if (_web) elementsToCopy.add('web');
-        if (_docs) elementsToCopy.add('docs');
-        _copy(_rootDir, _workDir, elementsToCopy,
-            accept: (pathToCopy) => path.basename(pathToCopy) != 'packages');
-      })
-      .then((_) => Process.run('pub', ['get'], workingDirectory: _workDir))
-      .then((_){
-        if (!_examples) return null;
+    return Process
+        .run('git', ['reset', '--hard'], workingDirectory: _workDir)
+        .then((_) => Process.run(
+            'git', ['remote', 'add', _gitRemoteOnRoot, _rootDir],
+            workingDirectory: _workDir))
+        .then((_) => Process
+            .run('git', ['checkout', 'gh-pages'], workingDirectory: _workDir)
+            .then((pr) {
+      if (pr.exitCode != 0) {
+        return Process.run('git', ['checkout', '--orphan', 'gh-pages'],
+            workingDirectory: _workDir);
+      }
+    }))
+        .then((_) =>
+            Process.run('git', ['rm', '-rf', '.'], workingDirectory: _workDir))
+        .then((_) {
+      // copy of directories
+      final elementsToCopy = ['pubspec.yaml', 'pubspec.lock', 'lib'];
+      if (_examples) elementsToCopy.add('example');
+      if (_web) elementsToCopy.add('web');
+      if (_docs) elementsToCopy.add('docs');
+      _copy(_rootDir, _workDir, elementsToCopy,
+          accept: (pathToCopy) => path.basename(pathToCopy) != 'packages');
+    })
+        .then((_) => Process.run('pub', ['get'], workingDirectory: _workDir))
+        .then((_) {
+      if (!_examples) return null;
 
-        print('examples compilation...');
+      print('examples compilation...');
 
-        return Process
+      return Process
           .run('pub', ['build', 'example'], workingDirectory: _workDir)
-          .then((_){
-            // move build to example and remove web
-            _delete(_workDir, ['example']);
-            new Directory(path.join(_workDir, 'build', 'example'))
-              .renameSync(path.join(_workDir, 'example'));
-          });
-      })
-      .then((_){
-        if (!_web) return null;
+          .then((_) {
+        // move build to example and remove web
+        _delete(_workDir, ['example']);
+        new Directory(path.join(_workDir, 'build', 'example'))
+            .renameSync(path.join(_workDir, 'example'));
+      });
+    }).then((_) {
+      if (!_web) return null;
 
-        print('web compilation...');
+      print('web compilation...');
 
-        return Process
-            .run('pub', ['build', 'web'], workingDirectory: _workDir)
-            .then((_){
-          // move build to example and remove web
-          _delete(_workDir, ['web']);
-          new Directory(path.join(_workDir, 'build', 'web'))
+      return Process
+          .run('pub', ['build', 'web'], workingDirectory: _workDir)
+          .then((_) {
+        // move build to example and remove web
+        _delete(_workDir, ['web']);
+        new Directory(path.join(_workDir, 'build', 'web'))
             .renameSync(path.join(_workDir, 'web'));
-        });
-      })
-      .then((_) {
-        if (_docGenFiles == null || _docGenFiles.isEmpty) return null;
+      });
+    }).then((_) {
+      if (_docGenFiles == null || _docGenFiles.isEmpty) return null;
 
-        print('dartDoc generation...');
-        return Process.run('docgen',
-            []..addAll(_docGenOptions)
-              ..addAll(_docGenFiles),
-            workingDirectory: _workDir).then((_){
-          new Directory(path.join(_workDir, 'dartdoc-viewer', 'client', 'out', 'web'))
+      print('dartDoc generation...');
+      return Process.run('docgen', []
+        ..addAll(_docGenOptions)
+        ..addAll(_docGenFiles), workingDirectory: _workDir).then((_) {
+        new Directory(
+                path.join(_workDir, 'dartdoc-viewer', 'client', 'out', 'web'))
             .renameSync(path.join(_workDir, 'dartdoc'));
-          new Directory(path.join(_workDir, 'dartdoc', 'packages')).deleteSync(recursive: true);
-          new Directory(path.join(_workDir, 'dartdoc-viewer', 'client', 'out', 'packages'))
+        new Directory(path.join(_workDir, 'dartdoc', 'packages')).deleteSync(
+            recursive: true);
+        new Directory(path.join(
+                _workDir, 'dartdoc-viewer', 'client', 'out', 'packages'))
             .renameSync(path.join(_workDir, 'dartdoc', 'packages'));
-        });
-      })
-      .then((_) {
-        _delete(_workDir, ['build', 'packages', 'lib', 'pubspec.yaml', 'pubspec.lock', 'dartdoc-viewer', '.pub']);
-      })
-      .then((_) {
-        if (_templateDir != null) {
-          final template = path.join(_rootDir, _templateDir);
-          _copy(template, _workDir, new Directory(template).listSync().map((e) => path.basename(e.path)));
-        }
-      })
-      .then((_) {
-        if (_indexGeneration) {
-          return ig.loadLibrary()
+      });
+    }).then((_) {
+      _delete(_workDir, [
+        'build',
+        'packages',
+        'lib',
+        'pubspec.yaml',
+        'pubspec.lock',
+        'dartdoc-viewer',
+        '.pub'
+      ]);
+    }).then((_) {
+      if (_templateDir != null) {
+        final template = path.join(_rootDir, _templateDir);
+        _copy(template, _workDir, new Directory(template)
+            .listSync()
+            .map((e) => path.basename(e.path)));
+      }
+    }).then((_) {
+      if (_indexGeneration) {
+        return ig
+            .loadLibrary()
             .then((_) => new ig.IndexGenerator.fromPath(_workDir).generate());
-        }
-      })
-      .then((_) {
-        if (doCustomTask != null) return doCustomTask(_workDir);
-      })
-      .then((_) => Process.run('git', ['add', '-f', '.'], workingDirectory: _workDir))
-      .then((_) => Process.run('git', ['commit', '-m', 'update gh-pages'], workingDirectory: _workDir))
-      .then((_) => Process.run('git', ['push', _gitRemoteOnRoot, 'gh-pages'], workingDirectory: _workDir))
-      .then((_) {
-        print("Your gh-pages has been updated.");
-        print("You can now push it on github.");
-      })
-      .whenComplete((){
-        new Directory(_workDir).deleteSync(recursive: true);
-      })
-      ;
+      }
+    }).then((_) {
+      if (doCustomTask != null) return doCustomTask(_workDir);
+    })
+        .then((_) =>
+            Process.run('git', ['add', '-f', '.'], workingDirectory: _workDir))
+        .then((_) => Process.run('git', ['commit', '-m', 'update gh-pages'],
+            workingDirectory: _workDir))
+        .then((_) => Process.run('git', ['push', _gitRemoteOnRoot, 'gh-pages'],
+            workingDirectory: _workDir))
+        .then((_) {
+      print("Your gh-pages has been updated.");
+      print("You can now push it on github.");
+    }).whenComplete(() {
+      new Directory(_workDir).deleteSync(recursive: true);
+    });
   }
 }
 
 void _delete(String dir, List<String> elements) {
-  elements.forEach((e){
+  elements.forEach((e) {
     final name = path.join(dir, e);
-    if (FileSystemEntity.isDirectorySync(name)) new Directory(name).deleteSync(recursive: true);
+    if (FileSystemEntity.isDirectorySync(name)) new Directory(name).deleteSync(
+        recursive: true);
     else if (FileSystemEntity.isFileSync(name)) new File(name).deleteSync();
   });
 }
 
-void _copy(String sourceDirPath, String targetDirPath,
-           Iterable<String> elementsToCopy,
-           {bool accept(String sourcePath)}) {
+void _copy(
+    String sourceDirPath, String targetDirPath, Iterable<String> elementsToCopy,
+    {bool accept(String sourcePath)}) {
   for (final element in elementsToCopy) {
     final sourcePath = path.join(sourceDirPath, element);
 
@@ -271,9 +288,9 @@ void _copy(String sourceDirPath, String targetDirPath,
     final targetPath = path.join(targetDirPath, element);
     if (FileSystemEntity.isDirectorySync(sourcePath)) {
       new Directory(targetPath).createSync();
-      _copy(sourcePath, targetPath,
-          new Directory(sourcePath).listSync().map((e) => path.basename(e.path)),
-          accept: accept);
+      _copy(sourcePath, targetPath, new Directory(sourcePath)
+          .listSync()
+          .map((e) => path.basename(e.path)), accept: accept);
     } else if (FileSystemEntity.isFileSync(sourcePath)) {
       new File(targetPath)
         ..createSync()

@@ -70,7 +70,7 @@ class IndexGenerator {
   // constructors
 
   IndexGenerator(this.baseDir);
-  IndexGenerator.fromPath(String path): this(new Directory(path));
+  IndexGenerator.fromPath(String path) : this(new Directory(path));
 
   // public methods
 
@@ -105,18 +105,20 @@ class IndexGenerator {
   // private methods
 
   Future<List<File>> _generate(Stream<Directory> dirs) {
-    Stream<File> targetIndexes = dirs
-        .map((d) => new File(path.join(d.path, indexFileName)));
+    Stream<File> targetIndexes =
+        dirs.map((d) => new File(path.join(d.path, indexFileName)));
 
     if (!overwrite) {
-      targetIndexes =
-        targetIndexes.asyncExpand(_removeIfExists);
+      targetIndexes = targetIndexes.asyncExpand(_removeIfExists);
     }
 
     return targetIndexes
         .asyncExpand((f) => _generateIndex(f).asStream())
         .toList()
-        .then((i) {_indexes = i; return _indexes;});
+        .then((i) {
+      _indexes = i;
+      return _indexes;
+    });
   }
 
   Future<File> _generateIndex(File idx) {
@@ -125,20 +127,19 @@ class IndexGenerator {
     var filesFuture = idx.parent.list().toList();
     var outputFuture = idx.open(mode: FileMode.WRITE);
 
-    return Future.wait([filesFuture, outputFuture])
-        .then((List args) {
-          List<File> files = args[0];
-          RandomAccessFile output = args[1];
-          return htmlWriter(output, baseDir, idx.parent, files)
-              .then((_) => output.close());
-        })
-        .then((_) => idx);
+    return Future.wait([filesFuture, outputFuture]).then((List args) {
+      List<File> files = args[0];
+      RandomAccessFile output = args[1];
+      return htmlWriter(output, baseDir, idx.parent, files)
+          .then((_) => output.close());
+    }).then((_) => idx);
   }
 
   Stream<Directory> get _dirs {
-    var subs = baseDir.list(recursive: true)
-      .where((e) => e is Directory)
-      .where((d) => !_isInExcludes(d.path));
+    var subs = baseDir
+        .list(recursive: true)
+        .where((e) => e is Directory)
+        .where((d) => !_isInExcludes(d.path));
     var base = new Stream.fromIterable([baseDir]);
 
     return _mergeStream([base, subs]);
@@ -146,9 +147,8 @@ class IndexGenerator {
 
   bool _isInExcludes(String p) {
     var relPath = path.split(path.relative(p, from: baseDir.path));
-    return excludes.any((e) => relPath.any((rp) =>
-        e.allMatches(rp).length == 0
-    ));
+    return excludes
+        .any((e) => relPath.any((rp) => e.allMatches(rp).length == 0));
   }
 
   Stream _mergeStream(Iterable<Stream> streams) {
@@ -157,7 +157,7 @@ class IndexGenerator {
     streams.forEach((s) {
       s.listen(c.add)
         ..onError(c.addError)
-        ..onDone((){
+        ..onDone(() {
           openStreams--;
           if (openStreams == 0) c.close();
         });
@@ -165,27 +165,30 @@ class IndexGenerator {
     return c.stream;
   }
 
-  Stream<File> _removeIfNotExists(File file) =>
-      _removeIf(file.exists(), file);
+  Stream<File> _removeIfNotExists(File file) => _removeIf(file.exists(), file);
 
   Stream<File> _removeIfExists(File file) =>
       _removeIf(file.exists().then((b) => !b), file);
 
-  Stream _removeIf(Future<bool> condition, element) =>
-      condition
-        .then((e) => e ? element : _NOTHING)
-        .asStream()
-        .where((i) => i != _NOTHING);
+  Stream _removeIf(Future<bool> condition, element) => condition
+      .then((e) => e ? element : _NOTHING)
+      .asStream()
+      .where((i) => i != _NOTHING);
 
-  static Future defaultHtmlWriter(RandomAccessFile output, Directory base, Directory target, List<FileSystemEntity> children) {
-    var p = (target.path == base.path) ?
-        '/' : path.relative(target.path, from: base.path);
+  static Future defaultHtmlWriter(RandomAccessFile output, Directory base,
+      Directory target, List<FileSystemEntity> children) {
+    var p = (target.path == base.path)
+        ? '/'
+        : path.relative(target.path, from: base.path);
     var title = 'Index of $p';
 
-    List<Pattern> ignoreds =
-        [r'^packages/$', r'^\.git/$', r'\.precompiled\.js$', r'\.part\.js$',
-         r'^index\.html$'
-         ].map((p) => new RegExp(p)).toList(growable: true);
+    List<Pattern> ignoreds = [
+      r'^packages/$',
+      r'^\.git/$',
+      r'\.precompiled\.js$',
+      r'\.part\.js$',
+      r'^index\.html$'
+    ].map((p) => new RegExp(p)).toList(growable: true);
     List<String> childNames = children
         .map((e) => path.basename(e.path) + ((e is Directory) ? '/' : ''))
         .where((n) => ignoreds.every((i) => i.allMatches(n).isEmpty))
@@ -201,13 +204,13 @@ class IndexGenerator {
       content.writeln('<p>No contents</p>');
     } else {
       content
-          ..writeln('<ul>')
-          ..writeAll(
-              childNames.map((f) => '<li><a href="$f">$f</a></li>'), '\n')
-          ..writeln('</ul>');
+        ..writeln('<ul>')
+        ..writeAll(childNames.map((f) => '<li><a href="$f">$f</a></li>'), '\n')
+        ..writeln('</ul>');
     }
     return output.writeString(content.toString());
   }
 }
 
-typedef Future HtmlWriter(RandomAccessFile output, Directory base, Directory target, List<FileSystemEntity> children);
+typedef Future HtmlWriter(RandomAccessFile output, Directory base,
+    Directory target, List<FileSystemEntity> children);

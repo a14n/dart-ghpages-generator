@@ -16,20 +16,20 @@ import 'package:args/args.dart';
 import 'package:ghpages_generator/ghpages_generator.dart';
 
 ArgParser get argParser => new ArgParser()
-    ..addOption('root-dir')
-    ..addOption('template-dir')
-    ..addFlag('with-examples', negatable: false)
-    ..addFlag('with-web', negatable: false)
-    ..addFlag('with-docs', negatable: false)
-    ..addFlag('with-index-generation', negatable: false);
+  ..addOption('root-dir')
+  ..addOption('template-dir')
+  ..addFlag('with-examples', negatable: false)
+  ..addFlag('with-web', negatable: false)
+  ..addFlag('with-docs', negatable: false)
+  ..addFlag('with-index-generation', negatable: false);
 
 main(List<String> args) {
   final argResult = argParser.parse(args);
   final generator = new Generator(rootDir: argResult['root-dir'])
-      ..templateDir = argResult['template-dir']
-      ..withExamples = argResult['with-examples']
-      ..withWeb = argResult['with-web']
-      ..withDocs = argResult['with-docs']
-      ..withIndexGeneration = argResult['with-index-generation'];
+    ..templateDir = argResult['template-dir']
+    ..withExamples = argResult['with-examples']
+    ..withWeb = argResult['with-web']
+    ..withDocs = argResult['with-docs']
+    ..withIndexGeneration = argResult['with-index-generation'];
   generator.generate();
 }
