@@ -55,18 +55,17 @@ void _moveContent(String base, String from) {
   _delete(base, [from]);
 }
 
-/**
- * This class allows to generate a new version of gh-pages. You can choose
- * what you want to put in gh-pages : examples, dartdoc, docs and/or custom
- * files.
- *
- * As sample here's how the gh-pages for this package is generated :
- *
- *     new gh.Generator()
- *     ..setDartDoc(['lib/ghpages_generator.dart'], excludedLibs: ['path'])
- *     ..templateDir = 'gh-pages-template'
- *     ..generate();
- */
+/// This class allows to generate a new version of gh-pages. You can choose
+/// what you want to put in gh-pages : examples, dartdoc, docs and/or custom
+/// files.
+///
+/// As sample here's how the gh-pages for this package is generated :
+///
+///     new gh.Generator()
+///     ..setDartDoc(['lib/ghpages_generator.dart'], excludedLibs: ['path'])
+///     ..templateDir = 'gh-pages-template'
+///     ..generate();
+///
 class Generator {
   String _rootDir;
   String _workDir;
@@ -81,11 +80,11 @@ class Generator {
   String _templateDir;
   bool _indexGeneration = false;
 
-  /**
-   * Create a [Generator] based on the current directory where script is launch.
-   * You can customize the name of the directory with the [rootDir] named
-   * parameter.
-   */
+  /// Create a [Generator] based on the current directory where script is
+  /// launched.
+  ///
+  /// You can customize the name of the directory with the [rootDir] named
+  /// parameter.
   Generator({String rootDir}) {
     final timestamp = new DateTime.now().millisecondsSinceEpoch;
     _rootDir = rootDir != null
@@ -99,13 +98,11 @@ class Generator {
   /// The directory use to build the gh-pages branch.
   String get workDir => _workDir;
 
-  /**
-   * Specify that _dartDoc_ have to be generated for the given [files] using the
-   * `docgen` command line tool.
-   *
-   * Options can be set through the named parameters. By default, _dartDoc_ is
-   * generated in `docs/dartdoc`.
-   */
+  /// Specify that _dartDoc_ have to be generated for the given [files] using
+  /// the `docgen` command line tool.
+  ///
+  /// Options can be set through the named parameters. By default, _dartDoc_ is
+  /// generated in `docs/dartdoc`.
   setDartDoc(List<String> files, {bool includePrivate, bool includeSdk,
       bool parseSdk, String introduction, List<String> excludedLibs,
       bool includeDependentPackages, String startPage}) {

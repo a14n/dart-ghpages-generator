@@ -5,21 +5,18 @@ import 'dart:async';
 
 import 'package:path/path.dart' as path;
 
-/**
- * A generator for index pages such as 'index.html'.
- *
- * The following example code generates gh-pages and
- * automatically generates `index.html` if `index.html` doesn't exist
- * in the `example` directory:
- *
- *     new gh.Generator()
- *       ..withExamples = true;
- *       ..generate(doCustomTask: (workDir) {
- *         gh.moveExampleAtRoot(workDir);
- *         return new IndexGenerator.fromPath(workDir).generate();
- *       });
- *
- */
+/// A generator for index pages such as 'index.html'.
+///
+/// The following example code generates gh-pages and
+/// automatically generates `index.html` if `index.html` doesn't exist
+/// in the `example` directory:
+///
+///     new gh.Generator()
+///       ..withExamples = true;
+///       ..generate(doCustomTask: (workDir) {
+///         gh.moveExampleAtRoot(workDir);
+///         return new IndexGenerator.fromPath(workDir).generate();
+///       });
 class IndexGenerator {
   static const _NOTHING = const Object();
 
@@ -31,40 +28,32 @@ class IndexGenerator {
 
   List<File> _indexes;
 
-  /**
-   * The generated index files.
-   * This value is `null` if [generate] wasn't executed.
-   */
+  /// The generated index files.
+  /// This value is `null` if [generate] wasn't executed.
   List<File> get indexes => _indexes;
 
-  /**
-   * The index page name.
-   * default: `index.html`
-   */
+  /// The index page name.
+  ///
+  /// default: `index.html`
   String indexFileName = DEFAULT_INDEX_FILE_NAME;
 
-  /**
-   * The flag whether this generator overwrite existing index pages.
-   * default: `false`
-   */
+  /// The flag whether this generator overwrite existing index pages.
+  ///
+  /// default: `false`
   bool overwrite = false;
 
-  /**
-   * The flag whether this generator generates all index pages in all sub directories.
-   * default: `true`
-   */
+  /// The flag whether this generator generates all index pages in all sub
+  /// directories.
+  ///
+  /// default: `true`
   bool recursive = true;
 
-  /**
-   * The directory names which are not indexed.
-   * default: `[DEFAULT_EXCLUDES]`
-   */
+  /// The directory names which are not indexed.
+  /// default: `[DEFAULT_EXCLUDES]`
   List<Pattern> excludes = DEFAULT_EXCLUDES;
 
-  /**
-   * The index page content builder
-   * default: [defaultHtmlWriter]
-   */
+  /// The index page content builder
+  /// default: [defaultHtmlWriter]
   HtmlWriter htmlWriter = defaultHtmlWriter;
 
   // constructors
@@ -74,10 +63,9 @@ class IndexGenerator {
 
   // public methods
 
-  /**
-   * Generates index files which named [indexFileName].
-   * Return a future of generated files.
-   */
+  /// Generates index files which named [indexFileName].
+  ///
+  /// Return a future of generated files.
   Future<List<File>> generate() {
     if (_indexes != null) {
       print('Warning: you might generate more than once.');
@@ -87,10 +75,9 @@ class IndexGenerator {
     return _generate(dirs);
   }
 
-  /**
-   * Deletes index files generated with [generate].
-   * Return a future of deleted (generated) files.
-   */
+  /// Deletes index files generated with [generate].
+  ///
+  /// Return a future of deleted (generated) files.
   Future<List<File>> delete() {
     if (_indexes == null) {
       throw new StateError('Cannot delete: you might not generate index pages');
