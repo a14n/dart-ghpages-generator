@@ -89,9 +89,7 @@ class Generator {
   /// parameter.
   Generator({String rootDir}) {
     final timestamp = new DateTime.now().millisecondsSinceEpoch;
-    _rootDir = rootDir != null
-        ? rootDir
-        : path.dirname(path.absolute(Platform.script.toFilePath()));
+    _rootDir = rootDir != null ? rootDir : path.absolute(path.current);
     _workDir = path.join(
         _rootDir, '../${path.basename(_rootDir)}-ghpages-${timestamp}');
     _gitRemoteOnRoot = 'origin-${timestamp}';
