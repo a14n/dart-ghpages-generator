@@ -15,16 +15,30 @@
 import 'package:args/args.dart';
 import 'package:ghpages_generator/ghpages_generator.dart';
 
-ArgParser get argParser => new ArgParser()
-  ..addOption('root-dir')
-  ..addOption('template-dir')
-  ..addFlag('with-examples', negatable: false)
-  ..addFlag('with-web', negatable: false)
-  ..addFlag('with-docs', negatable: false)
-  ..addFlag('with-index-generation', negatable: false);
+final argParser = new ArgParser()
+  ..addOption('root-dir', help: 'The path of the package directory.')
+  ..addOption('template-dir',
+      help: 'Indicates a template directory from which all files will be paste in "gh-pages".')
+  ..addFlag('help', abbr: 'h', negatable: false, help: 'Display usage')
+  ..addFlag('with-examples',
+      negatable: false,
+      help: 'Specify that the build of `example` directory have to be paste in "gh-pages".')
+  ..addFlag('with-web',
+      negatable: false,
+      help: 'Specify that the build of `web` directory have to be paste in "gh-pages".')
+  ..addFlag('with-docs',
+      negatable: false,
+      help: 'Specify that the `doc` directory have to be paste in "gh-pages".')
+  ..addFlag('with-index-generation',
+      negatable: false,
+      help: 'Specify that your script has to generate index pages automatically if there does not exist');
 
 main(List<String> args) {
   final argResult = argParser.parse(args);
+  if (argResult['help']) {
+    print(argParser.usage);
+    return;
+  }
   final generator = new Generator(rootDir: argResult['root-dir'])
     ..templateDir = argResult['template-dir']
     ..withExamples = argResult['with-examples']
