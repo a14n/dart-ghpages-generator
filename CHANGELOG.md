@@ -1,4 +1,8 @@
 
+# v0.3.0 (2015-05-18)
+
+Use `path.current` instead of `Platform.script` as default dir for `root-dir` to work with `pub global run`.
+
 # v0.2.5 (2015-05-12)
 
 Wider [args](https://pub.dartlang.org/packages/args) dependency.
