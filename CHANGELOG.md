@@ -1,4 +1,8 @@
 
+# v0.3.1 (2018-01-17)
+
+Widen `args` dependency to include 1.x.x.
+
 # v0.3.0 (2015-05-18)
 
 Use `path.current` instead of `Platform.script` as default dir for `root-dir` to work with `pub global run`.
