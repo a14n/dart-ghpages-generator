@@ -152,8 +152,6 @@ class IndexGenerator {
     return c.stream;
   }
 
-  Stream<File> _removeIfNotExists(File file) => _removeIf(file.exists(), file);
-
   Stream<File> _removeIfExists(File file) =>
       _removeIf(file.exists().then((b) => !b), file);
 
